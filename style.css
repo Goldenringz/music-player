@@ -8,6 +8,11 @@ html {
 	box-sizing: border-box;
 }
 
+audio {
+	position: absolute;
+	z-index: -100;
+}
+
 body {
 	display: flex;
 	font-family: Spartan, sans-serif;
