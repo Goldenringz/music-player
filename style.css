@@ -1,16 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Spartan:wght@400;700&display=swap');
 
-* {
-	touch-action: manipulation;
-}
-
 html {
 	box-sizing: border-box;
-}
-
-audio {
-	position: absolute;
-	z-index: -100;
 }
 
 body {
@@ -127,8 +118,6 @@ h3 {
 
 canvas {
 	position: absolute;
-	/* padding-bottom: 50%; */
-	/* height: 0; */
 	z-index: -1;
 }
 

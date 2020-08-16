@@ -2,7 +2,7 @@ const imageForAudio = document.getElementById('image');
 const title = document.getElementById('title');
 const artist = document.getElementById('artist');
 
-const audioEl = document.getElementById('audio');
+let audioEl = null;
 
 const progressContainer = document.getElementById('progress-container');
 const progressBar = document.getElementById('progress');
@@ -13,16 +13,20 @@ const prevBtn = document.getElementById('prev');
 const playBtn = document.getElementById('play');
 const nextBtn = document.getElementById('next');
 
-// set up audio context
-const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let freqArray = [];
+let analyser = null;
+function initAudioAnalyser(audio) {
+	// set up audio context
+	const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-// create analyser node and connect to audio source
-const analyser = audioContext.createAnalyser();
-const source = audioContext.createMediaElementSource(audioEl);
-source.connect(analyser);
-analyser.connect(audioContext.destination);
-analyser.fftSize = 2048 * 2 * 2;
-const freqArray = new Uint8Array(analyser.frequencyBinCount);
+	// create analyser node and connect to audio source
+	analyser = audioContext.createAnalyser();
+	const source = audioContext.createMediaElementSource(audio);
+	source.connect(analyser);
+	analyser.connect(audioContext.destination);
+	analyser.fftSize = 2048 * 2 * 2;
+	freqArray = new Uint8Array(analyser.frequencyBinCount);
+}
 
 let requestAnimationId = null;
 let canvasContext = null;
@@ -96,7 +100,7 @@ function startAudioWaveformAnimation() {
 		const rads = (Math.PI * 2) / bars;
 		let barHeightCoeff = 2.5;
 		if (window.innerWidth < 400) {
-			barHeightCoeff = 1;
+			barHeightCoeff = 1.5;
 		}
 		const barHeight = freqArray[i] * barHeightCoeff;
 
@@ -138,6 +142,9 @@ function loadAudio(audio) {
 }
 
 function loadAndPlayCurrAudio() {
+	if (!audioEl) {
+		initAudioEl();
+	}
 	loadAudio(audios[currAudioIdx]);
 	playAudio();
 }
@@ -218,40 +225,29 @@ function isMobile() {
 	});
 }
 
-// play or pause event listener
-if (isMobile()) {
-	// click listener for mobile
-	playBtn.addEventListener('touchend', () =>
-		isPlaying ? pauseAudio() : playAudio()
-	);
-} else {
-	playBtn.addEventListener('click', () =>
-		isPlaying ? pauseAudio() : playAudio()
-	);
+function initAudioEl() {
+	audioEl = new Audio();
+	// progress bar event listener
+	audioEl.addEventListener('timeupdate', updateProgressBar);
+	audioEl.addEventListener('ended', nextAudioHandler);
+
+	initAudioAnalyser(audioEl);
+	loadAudio(audios[currAudioIdx]);
 }
+
+// play or pause event listener
+playBtn.addEventListener('click', () => {
+	if (!audioEl) {
+		initAudioEl();
+	}
+	isPlaying ? pauseAudio() : playAudio();
+});
 
 // player controls event listeners
-if (isMobile()) {
-	// click listener for mobile
-	nextBtn.addEventListener('touchend', nextAudioHandler);
-	prevBtn.addEventListener('touchend', prevAudioHandler);
-} else {
-	nextBtn.addEventListener('click', nextAudioHandler);
-	prevBtn.addEventListener('click', prevAudioHandler);
-}
+nextBtn.addEventListener('click', nextAudioHandler);
+prevBtn.addEventListener('click', prevAudioHandler);
 
-// progress bar event listener
-audioEl.addEventListener('timeupdate', updateProgressBar);
-audioEl.addEventListener('ended', nextAudioHandler);
-
-if (isMobile()) {
-	progressContainer.addEventListener('touchend', setProgressBar);
-} else {
-	progressContainer.addEventListener('click', setProgressBar);
-}
-
-// on load - select first song
-loadAudio(audios[currAudioIdx]);
+progressContainer.addEventListener('click', setProgressBar);
 
 document.body.onkeyup = function (e) {
 	if (e.keyCode == 32) {
@@ -262,3 +258,8 @@ document.body.onkeyup = function (e) {
 		}
 	}
 };
+
+// on load - select first song
+if (!isMobile()) {
+	initAudioEl();
+}
