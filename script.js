@@ -202,19 +202,53 @@ function setProgressBar(e) {
 	}
 }
 
+function isMobile() {
+	const toMatch = [
+		/Android/i,
+		/webOS/i,
+		/iPhone/i,
+		/iPad/i,
+		/iPod/i,
+		/BlackBerry/i,
+		/Windows Phone/i,
+	];
+
+	return toMatch.some((toMatchItem) => {
+		return navigator.userAgent.match(toMatchItem);
+	});
+}
+
 // play or pause event listener
-playBtn.addEventListener('click', () =>
-	isPlaying ? pauseAudio() : playAudio()
-);
+if (isMobile()) {
+	// click listener for mobile
+	playBtn.addEventListener('touchend', () =>
+		isPlaying ? pauseAudio() : playAudio()
+	);
+} else {
+	playBtn.addEventListener('click', () =>
+		isPlaying ? pauseAudio() : playAudio()
+	);
+}
 
 // player controls event listeners
-nextBtn.addEventListener('click', nextAudioHandler);
-prevBtn.addEventListener('click', prevAudioHandler);
+if (isMobile()) {
+	// click listener for mobile
+	nextBtn.addEventListener('touchend', nextAudioHandler);
+	prevBtn.addEventListener('touchend', prevAudioHandler);
+} else {
+	nextBtn.addEventListener('click', nextAudioHandler);
+	prevBtn.addEventListener('click', prevAudioHandler);
+}
 
 // progress bar event listener
 audioEl.addEventListener('timeupdate', updateProgressBar);
 audioEl.addEventListener('ended', nextAudioHandler);
-progressContainer.addEventListener('click', setProgressBar);
+
+if (isMobile()) {
+	progressContainer.addEventListener('touchend', setProgressBar);
+} else {
+	progressContainer.addEventListener('click', setProgressBar);
+}
 
 // on load - select first song
 loadAudio(audios[currAudioIdx]);
