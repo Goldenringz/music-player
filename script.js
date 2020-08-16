@@ -13,6 +13,20 @@ const prevBtn = document.getElementById('prev');
 const playBtn = document.getElementById('play');
 const nextBtn = document.getElementById('next');
 
+// set up audio context
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+// create analyser node and connect to audio source
+const analyser = audioContext.createAnalyser();
+const source = audioContext.createMediaElementSource(audioEl);
+source.connect(analyser);
+analyser.connect(audioContext.destination);
+analyser.fftSize = 2048 * 2 * 2;
+const freqArray = new Uint8Array(analyser.frequencyBinCount);
+
+let requestAnimationId = null;
+let canvasContext = null;
+
 // music
 const audios = [
 	{
@@ -31,20 +45,80 @@ const audios = [
 		artist: 'Jacinto Design',
 	},
 	{
+		name: 'power-1',
+		displayName: 'Power',
+		artist: 'AShamaluevMusic',
+	},
+	{
 		name: 'metric-1',
 		displayName: 'Front Row (Remix)',
 		artist: 'Metric/Jacinto Design',
+	},
+	{
+		name: 'luxurious-1',
+		displayName: 'Luxurious',
+		artist: 'AShamaluevMusic',
 	},
 ];
 
 let isPlaying = false;
 let currAudioIdx = 0;
 
+// animation configs
+const radius = 150;
+const bars = 300;
+const barWidth = 2;
+
+// draw one waveform bar
+// x1, y1 - coords where bar starts
+// x2, y2 - coords where bar ends
+function drawBar(x1, y1, x2, y2, width, frequency) {
+	canvasContext.strokeStyle = 'hsla(200, 100%, 30%, 0.5)';
+	canvasContext.lineWidth = width;
+	canvasContext.beginPath();
+	canvasContext.moveTo(x1, y1);
+	canvasContext.lineTo(x2, y2);
+	canvasContext.stroke();
+}
+
+function startAudioWaveformAnimation() {
+	const canvas = document.getElementById('audiowave');
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+	const centerX = canvas.width / 2;
+	const centerY = canvas.height / 2;
+	canvasContext = canvas.getContext('2d');
+
+	analyser.getByteFrequencyData(freqArray);
+
+	for (let i = 0; i < bars; i++) {
+		//divide a circle into equal parts
+		const rads = (Math.PI * 2) / bars;
+		let barHeightCoeff = 2.5;
+		if (window.innerWidth < 400) {
+			barHeightCoeff = 1;
+		}
+		const barHeight = freqArray[i] * barHeightCoeff;
+
+		// set coordinates
+		const x = centerX + Math.cos(rads * i) * radius;
+		const y = centerY + Math.sin(rads * i) * radius;
+		const xEnd = centerX + Math.cos(rads * i) * (radius + barHeight);
+		const yEnd = centerY + Math.sin(rads * i) * (radius + barHeight);
+
+		drawBar(x, y, xEnd, yEnd, barWidth, freqArray[i]);
+	}
+	requestAnimationId = window.requestAnimationFrame(
+		startAudioWaveformAnimation
+	);
+}
+
 // play
 function playAudio() {
 	isPlaying = true;
 	playBtn.classList.replace('fa-play', 'fa-pause');
 	playBtn.setAttribute('title', 'Pause');
+	startAudioWaveformAnimation();
 	audioEl.play();
 }
 
@@ -144,3 +218,13 @@ progressContainer.addEventListener('click', setProgressBar);
 
 // on load - select first song
 loadAudio(audios[currAudioIdx]);
+
+document.body.onkeyup = function (e) {
+	if (e.keyCode == 32) {
+		if (isPlaying) {
+			pauseAudio();
+		} else {
+			playAudio();
+		}
+	}
+};

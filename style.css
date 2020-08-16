@@ -116,6 +116,13 @@ h3 {
 	margin: 0 1.9rem;
 }
 
+canvas {
+	position: absolute;
+	/* padding-bottom: 50%; */
+	/* height: 0; */
+	z-index: -1;
+}
+
 /* Media Query: iPhone (Vertical) */
 @media screen and (max-width: 25rem) {
 	h2 {
