@@ -148,8 +148,8 @@ class Player {
 
 		this.#progressContainer.addEventListener('click', this.#setProgressBar);
 
-		document.body.onkeyup = function (e) {
-			if (e.keyCode == 32) {
+		document.body.onkeyup = (event) => {
+			if (event.keyCode == 32) {
 				if (this.#isPlaying) {
 					this.#pauseAudio();
 				} else {
