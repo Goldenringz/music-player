@@ -133,14 +133,16 @@ class Player {
 		this.#loadAudio(this.#audios[this.#currAudioIdx]);
 	}
 
+	#handePlayOrPause = () => {
+		if (!this.#audioElement) {
+			this.#initAudioElement();
+		}
+		this.#isPlaying ? this.#pauseAudio() : this.#playAudio();
+	};
+
 	init() {
 		// play or pause event listener
-		this.#playBtn.addEventListener('click', () => {
-			if (!this.#audioElement) {
-				this.#initAudioElement();
-			}
-			this.#isPlaying ? this.#pauseAudio() : this.#playAudio();
-		});
+		this.#playBtn.addEventListener('click', this.#handePlayOrPause);
 
 		// player controls event listeners
 		this.#nextBtn.addEventListener('click', this.#nextAudioHandler);
@@ -150,11 +152,7 @@ class Player {
 
 		document.body.onkeyup = (event) => {
 			if (event.keyCode == 32) {
-				if (this.#isPlaying) {
-					this.#pauseAudio();
-				} else {
-					this.#playAudio();
-				}
+				this.#handePlayOrPause();
 			}
 		};
 	}
